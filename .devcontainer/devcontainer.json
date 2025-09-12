@@ -1,0 +1,40 @@
+{
+    "name": "${localWorkspaceFolderBasename}",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/home/root/work",
+
+    // Features to add to the dev container. More info: https://containers.dev/features.
+    // "features": {},
+
+    // Use 'postCreateCommand' to run commands after the container is created.
+    // "postCreateCommand": "sudo chmod a+x \"$(pwd)\" && sudo rm -rf /var/www/html && sudo ln -s \"$(pwd)\" /var/www/html"
+
+    // Configure tool-specific properties.
+
+    "customizations": {
+        "vscode": {
+            // You can add your extensions here
+            // To get your list of extensions use shell command outside of container
+            // code --list-extensions
+            "extensions": [
+                "golang.go"
+            ],
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.cwd": "/home/root/work",
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "/bin/bash",
+                        "icon": "terminal-bash"
+                    }
+                }
+            }
+        }
+    },
+
+    // Container user VS Code should use when connecting
+    //"remoteUser": "amenshenin"
+    // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+    // "remoteUser": "root"
+}

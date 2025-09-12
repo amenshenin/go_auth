@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd .devcontainer
+
+if [ "$1" == "--up" ]; then
+    docker-compose up ${COMPOSE_ARGS:-}
+elif [ "$1" == "--upb" ]; then
+    docker-compose up -d --build ${COMPOSE_ARGS:-}
+elif [ "$1" == "--upb" ]; then
+    docker-compose up -d --build ${COMPOSE_ARGS:-}
+else
+    echo "Usage: $0 [--up|--upd|--upb]"
+fi
