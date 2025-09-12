@@ -41,6 +41,7 @@ services:
     secrets:
       - host_ssh_key
       - host_ssh_config
+      - config
     volumes:
       - ../:/home/root/work
 networks:
@@ -51,3 +52,5 @@ secrets:
     file: ${SSH_FILE}
   host_ssh_config:
     file: ${SSH_CONFIG_FILE}
+  config:
+    file: ${CUREENT_CONFIG_PATH}
