@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
+	"log/slog"
+	"os"
 
 	config "github.com/amenshenin/go_auth"
 )
@@ -14,10 +16,27 @@ func main() {
 	config := config.MustLoad(*configPath)
 
 	//Init logs
+	log := initLogger(config.Enviremant)
+	log.Info("Start service: init logger complete")
 
 	//Init DB
 
 	//Init server
 
-	fmt.Println("go-go-go", config) //https://www.youtube.com/watch?v=rCJvW2xgnk0
+	log.Info("go-go-go", config) //https://www.youtube.com/watch?v=rCJvW2xgnk0
+}
+
+func initLogger(env string) *slog.Logger {
+	var logg *slog.Logger
+	switch env {
+	case config.EnvLocal:
+		logg = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	case config.EnvDev:
+		logg = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	case config.EnvProd:
+		logg = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	default:
+		log.Fatalf("Wrong log initialization")
+	}
+	return logg
 }

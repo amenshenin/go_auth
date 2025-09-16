@@ -26,11 +26,17 @@ func containsWord(slice []string, word string) bool {
 	return false
 }
 
+const (
+	EnvLocal = "local"
+	EnvProd  = "prod"
+	EnvDev   = "dev"
+)
+
 func (c Config) ValidateConfig() error {
 	if c.ProjectName == "" {
 		return fmt.Errorf("Config error. Empty required field %s", "ProjectName")
 	}
-	environiments := []string{"local", "dev", "prod"}
+	environiments := []string{EnvLocal, EnvProd, EnvDev}
 	if c.Enviremant == "" || !containsWord(environiments, c.Enviremant) {
 		return fmt.Errorf("Config error. Empty required field %s", "Enviremant")
 	}
