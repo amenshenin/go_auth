@@ -17,10 +17,9 @@ const (
 )
 
 type Config struct {
-	ProjectName string `env:"COMPOSE_PROJECT_NAME env-required:"true"`
-	Enviremant  string `env:"envIRONMENT" env-default:"local"`
-	DB          struct {
-		Host     string `env:"-"`
+	Enviremant string `env:"envIRONMENT" env-default:"local"`
+	DB         struct {
+		Host     string `env:"DB_HOST" env-required:"true"`
 		Port     int    `env:"DB_PORT" env-default:"5432"`
 		Username string `env:"DB_USER" env-required:"true"`
 		Password string `env:"DB_PASS" env-required:"true"`
@@ -56,12 +55,11 @@ func LoadConfig(path string) (*Config, error) {
 	}
 	err := godotenv.Load(path)
 	if err != nil {
-		return &cfg, fmt.Errorf("%s. Cannot read the config file %s", err.Error(), path)
+		return &cfg, fmt.Errorf("%w. Cannot read the config file %s", err, path)
 	}
 	err = cleanenv.ReadEnv(&cfg)
 	if err != nil {
-		return &cfg, fmt.Errorf("%s. Cannot read from environment variables", err.Error())
+		return &cfg, fmt.Errorf("%w. Cannot read from environment variables", err)
 	}
-	cfg.DB.Host = fmt.Sprintf("%s-db", cfg.ProjectName)
 	return &cfg, nil
 }

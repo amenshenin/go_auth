@@ -6,6 +6,8 @@ import (
 	"log"
 
 	config "github.com/amenshenin/go_auth/internal/configs"
+	"github.com/amenshenin/go_auth/internal/loggers"
+	"github.com/amenshenin/go_auth/internal/storages/postgres"
 	// "log/slog"
 	// "os"
 )
@@ -19,13 +21,21 @@ func main() {
 		log.Fatalf("Error loading config file: %s", err.Error())
 	}
 
-	fmt.Printf("Config: %#v\n", config)
-
 	//Init logs
-	// log := initLogger(config.Enviremant)
-	// log.Info("Start service: init logger complete")
+	logger, err := loggers.GetLogger(config)
+	if err != nil {
+		log.Fatalf("Error init logger: %s", err.Error())
+	}
+	logger.Info("Start service: init logger complete")
 
-	// //Init DB
+	//Init DB
+	storage, err := postgres.GetConnection(config)
+	if err != nil {
+		log.Fatalf("Error database connection: %s", err.Error())
+	}
+	logger.Info("Start service: getting database connection complete")
+
+	fmt.Println(storage.DB)
 
 	// //Init server
 
