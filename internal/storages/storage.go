@@ -1,9 +1,3 @@
 package storages
 
-import (
-	"github.com/jmoiron/sqlx"
-)
-
-type Storage struct {
-	DB *sqlx.DB
-}
+//TODO: needs add db errors for customers

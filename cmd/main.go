@@ -1,12 +1,19 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	config "github.com/amenshenin/go_auth/internal/configs"
+	"github.com/amenshenin/go_auth/internal/handler"
+	"github.com/amenshenin/go_auth/internal/httpserver"
 	"github.com/amenshenin/go_auth/internal/loggers"
+	"github.com/amenshenin/go_auth/internal/repository"
+	"github.com/amenshenin/go_auth/internal/service"
 	"github.com/amenshenin/go_auth/internal/storages/postgres"
 	// "log/slog"
 	// "os"
@@ -15,6 +22,7 @@ import (
 func main() {
 	//Init config
 	configPath := flag.String("config-path", "/run/secrets/config", "Please set in the config-path flag the path to config file")
+	needCreteStructure := flag.Bool("need-create-structure", false, "Please set the need-create-structure if you need create tables and primary data")
 	flag.Parse()
 	config, err := config.LoadConfig(*configPath)
 	if err != nil {
@@ -29,30 +37,42 @@ func main() {
 	logger.Info("Start service: init logger complete")
 
 	//Init DB
-	storage, err := postgres.GetConnection(config)
+	db, err := postgres.GetConnection(config)
 	if err != nil {
-		log.Fatalf("Error database connection: %s", err.Error())
+		logger.Error("Error database connection", "error", err.Error())
+		os.Exit(1)
 	}
 	logger.Info("Start service: getting database connection complete")
 
-	fmt.Println(storage.DB)
+	repo := repository.NewRepository(db)
+	service := service.NewService(repo)
+	if *needCreteStructure {
+		//service.CreatePrimaryData() TODO need release
+	}
+	handlers := handler.NewHandler(config, logger, service)
+	server := new(httpserver.Server)
+
+	go func() {
+		if err := server.Run(config, handlers.InitRouts()); err != nil {
+			logger.Error("error occured while running http server", "error", err.Error())
+			os.Exit(1)
+		}
+	}()
+	logger.Info("server started")
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, syscall.SIGTERM, syscall.SIGINT)
+	<-done
+	logger.Info("stopping server")
+
+	if err := server.Shutdown(context.Background()); err != nil {
+		logger.Error("error occured on server shutting down", "error", err.Error())
+	}
+
+	if err := db.Close(); err != nil {
+		logger.Error("error occured on db connection close", "error", err.Error())
+	}
 
 	// //Init server
 
 	// log.Info("go-go-go", config) //https://www.youtube.com/watch?v=rCJvW2xgnk0
 }
-
-// func initLogger(env string) *slog.Logger {
-// 	var logg *slog.Logger
-// 	switch env {
-// 	case config.EnvLocal:
-// 		logg = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-// 	case config.EnvDev:
-// 		logg = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
-// 	case config.EnvProd:
-// 		logg = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-// 	default:
-// 		log.Fatalf("Wrong log initialization")
-// 	}
-// 	return logg
-// }

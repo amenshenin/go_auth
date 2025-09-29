@@ -17,7 +17,7 @@ const (
 )
 
 type Config struct {
-	Enviremant string `env:"envIRONMENT" env-default:"local"`
+	Enviremant string `env:"ENVIRONMENT" env-default:"local"`
 	DB         struct {
 		Host     string `env:"DB_HOST" env-required:"true"`
 		Port     int    `env:"DB_PORT" env-default:"5432"`
