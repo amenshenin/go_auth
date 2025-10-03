@@ -45,9 +45,20 @@ func main() {
 	logger.Info("Start service: getting database connection complete")
 
 	repo := repository.NewRepository(db)
-	service := service.NewService(repo)
+	service := service.NewService(config, repo)
 	if *needCreteStructure {
-		//service.CreatePrimaryData() TODO need release
+		err := service.InitCore.CreateTablesStructure()
+		if err != nil {
+			logger.Error("Cannot create tables structure", "error", err.Error())
+			os.Exit(1)
+		}
+		logger.Info("Tables structure has been created successfully")
+		err = service.InitCore.CreateRootAdmin()
+		if err != nil {
+			logger.Error("Cannot create root admin", "error", err.Error())
+			os.Exit(1)
+		}
+		logger.Info("Root admin has been created successfully")
 	}
 	handlers := handler.NewHandler(config, logger, service)
 	server := new(httpserver.Server)
@@ -59,6 +70,7 @@ func main() {
 		}
 	}()
 	logger.Info("server started")
+
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, syscall.SIGTERM, syscall.SIGINT)
 	<-done
@@ -71,8 +83,4 @@ func main() {
 	if err := db.Close(); err != nil {
 		logger.Error("error occured on db connection close", "error", err.Error())
 	}
-
-	// //Init server
-
-	// log.Info("go-go-go", config) //https://www.youtube.com/watch?v=rCJvW2xgnk0
 }

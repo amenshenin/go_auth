@@ -1,8 +1,10 @@
 package config
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"math/big"
 	"os"
 	"time"
 
@@ -18,7 +20,14 @@ const (
 
 type Config struct {
 	Enviremant string `env:"ENVIRONMENT" env-default:"local"`
-	DB         struct {
+	App        struct {
+		AppLogin   string        `env:"APP_USERNAME" env-default:"root"`
+		AppPassord string        `env:"APP_PASSWORD" env-default:"root"`
+		TockenTTL  time.Duration `env:"APP_TOCKEN_TTL" env-default:"1h"`
+		SigningKey string        `env:"-"`
+	}
+
+	DB struct {
 		Host     string `env:"DB_HOST" env-required:"true"`
 		Port     int    `env:"DB_PORT" env-default:"5432"`
 		Username string `env:"DB_USER" env-required:"true"`
@@ -61,5 +70,22 @@ func LoadConfig(path string) (*Config, error) {
 	if err != nil {
 		return &cfg, fmt.Errorf("%w. Cannot read from environment variables", err)
 	}
+	cfg.App.SigningKey, err = generateRandomString(16)
+	if err != nil {
+		return &cfg, fmt.Errorf("%w. Cannot generate SigningKey", err)
+	}
 	return &cfg, nil
+}
+
+func generateRandomString(length int) (string, error) {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		b[i] = charset[num.Int64()]
+	}
+	return string(b), nil
 }
