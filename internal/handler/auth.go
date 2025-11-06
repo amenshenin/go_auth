@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/amenshenin/go_auth/internal/schemas"
 	"github.com/gin-gonic/gin"
@@ -49,4 +50,37 @@ func (h *Handler) signIn(c *gin.Context) {
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"token": token,
 	})
+}
+
+const (
+	autorizationHandler = "Autorization"
+	userCtx             = "userId"
+)
+
+func (h *Handler) userIdentify(c *gin.Context) {
+	header := c.GetHeader(autorizationHandler)
+	if header == "" {
+		h.logger.Error("Error in userIdentify", "error", "empty auth header")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
+			"error": "empty auth header",
+		})
+		return
+	}
+	headerParts := strings.Split(header, " ")
+	if len(headerParts) != 2 {
+		h.logger.Error("Error in userIdentify", "error", "invalid auth header")
+		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
+			"error": "invalid auth header",
+		})
+		return
+	}
+	userId, err := h.service.Autorization.ParceToken(headerParts[1])
+	if err != nil {
+		h.logger.Error("Error in userIdentify", "error", err.Error())
+		c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]any{
+			"error": "invalid auth header",
+		})
+		return
+	}
+	c.Set(userCtx, userId)
 }
